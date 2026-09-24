@@ -139,6 +139,7 @@ legend{font-weight:700;font-size:1.05rem;padding:0;margin-bottom:10px}
 .ai-note{padding:10px 14px;border-radius:10px;margin-bottom:16px;font-size:.95rem;background:var(--amber-soft);border-left:4px solid var(--amber)}
 .ai-note.err{background:var(--red-soft);border-left-color:var(--red)}
 .ai-note.busy{background:var(--green-soft);border-left-color:var(--green)}
+.ai-note .retry{display:flex;margin-top:10px}
 .photo-preview{display:flex;gap:12px;align-items:center;margin-bottom:14px}
 .photo-preview img{width:84px;height:84px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
 
@@ -555,10 +556,16 @@ legend{font-weight:700;font-size:1.05rem;padding:0;margin-bottom:10px}
     showModal('#form-dialog');
   }
 
-  function aiNote(msg, kind){
+  function aiNote(msg, kind, retry){
     const n = $('#ai-note');
     if (!msg) { n.hidden = true; return; }
     n.textContent = msg; n.className = 'ai-note' + (kind ? ' ' + kind : ''); n.hidden = false;
+    if (retry) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'btn btn-quiet btn-small retry'; b.textContent = 'Try again';
+      b.addEventListener('click', retry);
+      n.appendChild(b);
+    }
   }
 
   function setBusy(busy){
@@ -587,13 +594,27 @@ legend{font-weight:700;font-size:1.05rem;padding:0;margin-bottom:10px}
     setBusy(true);
     aiNote('Reading the pack…', 'busy');
     try {
-      const img = await fileToJpeg(file, 1280);
-      $('#photo-img').src = img.preview;
+      state.lastPhoto = await fileToJpeg(file, 1280);
+      $('#photo-img').src = state.lastPhoto.preview;
       $('#photo-preview').hidden = false;
-      const j = await api('identify', { image: img.data, mimeType: 'image/jpeg' });
+    } catch (e) {
+      setBusy(false);
+      aiNote('Could not open the photo: ' + e.message + '. You can type the details instead.', 'err');
+      return;
+    }
+    await readLastPhoto();
+  }
+
+  // Sends the photo already taken; used for the first attempt and for Try again.
+  async function readLastPhoto(){
+    if (!state.lastPhoto) return;
+    setBusy(true);
+    aiNote('Reading the pack… this can take up to 30 seconds if Gemini is busy.', 'busy');
+    try {
+      const j = await api('identify', { image: state.lastPhoto.data, mimeType: 'image/jpeg' });
       applyResult(j.result);
     } catch (e) {
-      aiNote('Could not read the photo: ' + e.message + '. You can type the details instead.', 'err');
+      aiNote('Could not read the photo. ' + e.message, 'err', readLastPhoto);
     } finally { setBusy(false); }
   }
 
@@ -606,7 +627,7 @@ legend{font-weight:700;font-size:1.05rem;padding:0;margin-bottom:10px}
     try {
       const j = await api('identify', { name });
       applyResult(j.result);
-    } catch (e) { aiNote('Lookup failed: ' + e.message, 'err'); }
+    } catch (e) { aiNote('Lookup failed. ' + e.message, 'err', identifyFromName); }
     finally { setBusy(false); }
   }
 
