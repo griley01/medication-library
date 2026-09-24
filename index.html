@@ -45,6 +45,16 @@ button{cursor:pointer}
 .top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:22px 0 6px}
 h1{font-size:1.75rem;line-height:1.1;margin:0;letter-spacing:-.015em}
 .count{margin:4px 0 0;color:var(--muted);font-size:.95rem}
+.count:empty{display:none}
+
+/* Daily / As needed switch: swaps the whole view below it */
+.mode{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:14px}
+.mode button{height:50px;border:0;border-radius:10px;background:transparent;font-weight:700;font-size:1.05rem;display:flex;align-items:center;justify-content:center;gap:8px}
+.mode button[aria-pressed="true"]{background:var(--green);color:var(--on-green)}
+.mode .n{font-weight:400;opacity:.85}
+.mode .dot{width:9px;height:9px;border-radius:50%;background:var(--amber);flex:none}
+.mode button[aria-pressed="true"] .dot{background:var(--on-green)}
+.switch-hint{all:unset;cursor:pointer;display:block;margin-top:8px;color:var(--green);font-weight:700;text-decoration:underline}
 .icon-btn{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);display:grid;place-items:center;flex:none}
 .icon-btn svg{width:22px;height:22px}
 
@@ -186,6 +196,11 @@ legend{font-weight:700;font-size:1.05rem;padding:0;margin-bottom:10px}
     </button>
   </header>
 
+  <div class="mode" role="group" aria-label="Which medicines to show">
+    <button type="button" data-mode="Daily" aria-pressed="true">Daily <span class="n" id="n-daily"></span><span class="dot" id="dot-daily" hidden title="Needs attention"></span></button>
+    <button type="button" data-mode="As needed" aria-pressed="false">As needed <span class="n" id="n-asneeded"></span><span class="dot" id="dot-asneeded" hidden title="Needs attention"></span></button>
+  </div>
+
   <div id="banner" class="banner" role="status" hidden></div>
 
   <section class="attention" id="attention" hidden aria-labelledby="att-h">
@@ -269,6 +284,7 @@ legend{font-weight:700;font-size:1.05rem;padding:0;margin-bottom:10px}
           <div class="field"><label for="f-expiry">Expiry</label><input id="f-expiry" name="expiry" type="month" placeholder="YYYY-MM"></div>
           <div class="field"><label for="f-status">Status</label><select id="f-status" name="status"><option>Active</option><option>Stopped</option></select></div>
         </div>
+        <div class="field"><label for="f-usage">Which list</label><select id="f-usage" name="usage"><option>Daily</option><option>As needed</option></select></div>
         <div class="field"><label for="f-for">Prescribed for</label><input id="f-for" name="prescribedFor" autocomplete="off"></div>
         <div class="field"><label for="f-dose">How you take it</label><input id="f-dose" name="dose" placeholder="e.g. 1 tablet twice a day" autocomplete="off"></div>
         <div class="row2">
@@ -325,10 +341,13 @@ legend{font-weight:700;font-size:1.05rem;padding:0;margin-bottom:10px}
   const LS_CACHE = 'medcab.cache';
   const SOON_DAYS = 60;
   const AI_FIELDS = ['name','genericName','strength','form','drugClass','usedFor','interactions','watchOuts'];
-  const FORM_FIELDS = AI_FIELDS.concat(['expiry','status','prescribedFor','dose','quantity','lowStockAt','prescriber','notes']);
+  const LS_MODE = 'medcab.mode';
+  const FORM_FIELDS = AI_FIELDS.concat(['usage','expiry','status','prescribedFor','dose','quantity','lowStockAt','prescriber','notes']);
 
   const $ = s => document.querySelector(s);
-  const state = { cfg: null, role: null, items: [], filter: 'all', q: '', editingId: null, detailId: null, aiSource: '', qtyTimer: null };
+  const state = { cfg: null, role: null, items: [], filter: 'all', q: '', editingId: null, detailId: null, aiSource: '', qtyTimer: null, mode: 'Daily' };
+  const usageOf = i => i.usage === 'As needed' ? 'As needed' : 'Daily';
+  const isFlagged = i => { const e = expiryInfo(i.expiry), s = stockInfo(i); return (e && e.state !== 'ok') || (s && s.low); };
 
   /* ---------- Storage ---------- */
   const store = {
@@ -410,8 +429,18 @@ legend{font-weight:700;font-size:1.05rem;padding:0;margin-bottom:10px}
     const canEdit = state.role === 'edit';
     $('#add-bar').hidden = !canEdit;
 
-    const active = state.items.filter(i => i.status !== 'Stopped');
-    $('#count').textContent = (active.length === 1 ? '1 medicine in use' : active.length + ' medicines in use') + (state.role === 'view' ? '. View only.' : '');
+    // Everything below the switch only sees the chosen list.
+    const inUse = state.items.filter(i => i.status !== 'Stopped');
+    const daily = inUse.filter(i => usageOf(i) === 'Daily');
+    const asNeeded = inUse.filter(i => usageOf(i) === 'As needed');
+    $('#n-daily').textContent = daily.length;
+    $('#n-asneeded').textContent = asNeeded.length;
+    $('#dot-daily').hidden = !daily.some(isFlagged);
+    $('#dot-asneeded').hidden = !asNeeded.some(isFlagged);
+    document.querySelectorAll('.mode button').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === state.mode ? 'true' : 'false'));
+    $('#count').textContent = state.role === 'view' ? 'View only' : '';
+
+    const active = state.mode === 'Daily' ? daily : asNeeded;
 
     // Needs attention
     const flagged = active.map(i => ({ i, ex: expiryInfo(i.expiry), st: stockInfo(i) }))
@@ -432,21 +461,26 @@ legend{font-weight:700;font-size:1.05rem;padding:0;margin-bottom:10px}
 
     // Main list
     const q = state.q.toLowerCase();
-    let rows = state.items.filter(i => {
+    const matchesQ = i => !q || [i.name, i.genericName, i.prescribedFor, i.drugClass, i.usedFor].join(' ').toLowerCase().includes(q);
+    let rows = state.items.filter(i => usageOf(i) === state.mode).filter(i => {
       if (state.filter === 'stopped') return i.status === 'Stopped';
       if (i.status === 'Stopped') return false;
       if (state.filter === 'expiring') { const e = expiryInfo(i.expiry); return e && e.state !== 'ok'; }
       if (state.filter === 'low') { const s = stockInfo(i); return s && s.low; }
       return true;
     });
-    if (q) rows = rows.filter(i => [i.name, i.genericName, i.prescribedFor, i.drugClass, i.usedFor].join(' ').toLowerCase().includes(q));
+    rows = rows.filter(matchesQ);
     rows.sort((a, b) => String(a.name).localeCompare(String(b.name), 'en-GB', { sensitivity: 'base' }));
 
     const list = $('#list');
     if (!state.items.length) {
       list.innerHTML = `<li class="empty">${canEdit ? 'No medicines yet. Add one by photographing the pack or typing its name.' : 'No medicines on this list yet.'}</li>`;
     } else if (!rows.length) {
-      list.innerHTML = `<li class="empty">No medicines match. Try another filter or search.</li>`;
+      const other = state.mode === 'Daily' ? 'As needed' : 'Daily';
+      const elsewhere = q ? state.items.filter(i => usageOf(i) === other && matchesQ(i)).length : 0;
+      const msg = q ? 'No matches in ' + state.mode.toLowerCase() + ' medicines.'
+        : state.filter === 'all' ? 'No ' + state.mode.toLowerCase() + ' medicines yet.' : 'Nothing in this filter.';
+      list.innerHTML = `<li class="empty">${esc(msg)}${elsewhere ? `<button class="switch-hint" data-switch="${esc(other)}">Show ${elsewhere} match${elsewhere === 1 ? '' : 'es'} in ${esc(other.toLowerCase())}</button>` : ''}</li>`;
     } else {
       list.innerHTML = rows.map(cardHTML).join('');
     }
@@ -501,6 +535,7 @@ legend{font-weight:700;font-size:1.05rem;padding:0;margin-bottom:10px}
       <h2 class="d-name" id="d-name">${esc(it.name)}</h2>
       ${sub ? `<p class="d-sub">${esc(sub)}</p>` : ''}
       ${it.genericName && it.genericName.toLowerCase() !== String(it.name).toLowerCase() ? `<p class="d-generic">${esc(it.genericName)}</p>` : ''}
+      <span class="badge">${usageOf(it)}</span>
       ${it.status === 'Stopped' ? '<span class="badge">Stopped</span>' : ''}
       <dl class="facts">
         ${fact('Expiry', expHTML)}
@@ -549,6 +584,7 @@ legend{font-weight:700;font-size:1.05rem;padding:0;margin-bottom:10px}
       f.elements[k].value = v;
     });
     if (!f.elements.status.value) f.elements.status.value = 'Active';
+    f.elements.usage.value = item ? usageOf(item) : state.mode;
     $('#form-title').textContent = item ? 'Edit medicine' : 'Add medicine';
     $('#save-btn').textContent = item ? 'Save changes' : 'Save medicine';
     $('#photo-preview').hidden = true;
@@ -648,6 +684,7 @@ legend{font-weight:700;font-size:1.05rem;padding:0;margin-bottom:10px}
         const j = await api('add', { item });
         state.items.push(j.item); toast('Medicine saved');
       }
+      if (usageOf(item) !== state.mode) { state.mode = usageOf(item); store.set(LS_MODE, state.mode); }
       cache(); render();
       $('#form-dialog').close();
       if (state.editingId) openDetail(state.editingId);
@@ -769,6 +806,14 @@ legend{font-weight:700;font-size:1.05rem;padding:0;margin-bottom:10px}
     document.querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', x === c ? 'true' : 'false'));
     render();
   }));
+  function setMode(mode){
+    state.mode = mode === 'As needed' ? 'As needed' : 'Daily';
+    store.set(LS_MODE, state.mode);
+    render();
+    window.scrollTo({ top: 0 });
+  }
+  document.querySelectorAll('.mode button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+  $('#list').addEventListener('click', e => { const b = e.target.closest('[data-switch]'); if (b) setMode(b.dataset.switch); });
   $('#search').addEventListener('input', e => { state.q = e.target.value.trim(); render(); });
   $('#add-btn').addEventListener('click', () => showModal('#add-dialog'));
   $('#choose-photo').addEventListener('click', () => { $('#add-dialog').close(); $('#photo-input').value = ''; $('#photo-input').click(); });
@@ -793,6 +838,7 @@ legend{font-weight:700;font-size:1.05rem;padding:0;margin-bottom:10px}
     history.replaceState(null, '', location.pathname + location.search);
   }
   state.cfg = store.get(LS_CFG);
+  state.mode = store.get(LS_MODE) === 'As needed' ? 'As needed' : 'Daily';
   render();
   if (state.cfg) load(); else openSettings();
 
