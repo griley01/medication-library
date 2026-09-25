@@ -3,8 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Medicine cabinet</title>
-<meta name="theme-color" content="#0F6B4F">
+<title>Alice's Medicine Cabinet</title>
+<meta name="theme-color" content="#FCEEF3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#26161D" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -17,8 +18,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#F2F5F4; --card:#FFFFFF; --ink:#1B2A2C; --muted:#55676A; --line:#D2DCDA;
-  --green:#0F6B4F; --on-green:#FFFFFF; --green-soft:#E0EFE8;
+  --paper:#F6F4F5; --card:#FFFFFF; --ink:#2A1F24; --muted:#6B5F64; --line:#E2D8DC;
+  --accent:#B8446C; --on-accent:#FFFFFF; --accent-soft:#FBE6EE; --head:#FCEEF3;
   --amber:#865000; --amber-soft:#FBEED4;
   --red:#9F2229; --red-soft:#FAE3E4;
   --font:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -26,23 +27,24 @@
 }
 @media (prefers-color-scheme: dark){
   :root{
-    --paper:#0F1617; --card:#172123; --ink:#E3ECEA; --muted:#9DB0AD; --line:#2A393B;
-    --green:#5CC39A; --on-green:#08170F; --green-soft:#15312A;
+    --paper:#141012; --card:#1F191C; --ink:#F1E8EC; --muted:#B3A4AA; --line:#3A3035;
+    --accent:#F2A0BC; --on-accent:#2A0F1A; --accent-soft:#3A1E29; --head:#26161D;
     --amber:#F0B458; --amber-soft:#33270E;
     --red:#F28990; --red-soft:#381B1E;
   }
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font);font-size:17px;line-height:1.45;-webkit-text-size-adjust:100%}
-body{padding:env(safe-area-inset-top) env(safe-area-inset-right) calc(96px + env(safe-area-inset-bottom)) env(safe-area-inset-left)}
+body{padding:0 env(safe-area-inset-right) calc(96px + env(safe-area-inset-bottom)) env(safe-area-inset-left)}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
-:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 [hidden]{display:none !important}
 .wrap{max-width:720px;margin:0 auto;padding:0 18px}
 
 /* Header */
-.top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:22px 0 6px}
+.masthead{background:var(--head);padding-top:env(safe-area-inset-top);border-bottom:1px solid var(--line)}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:22px 0 18px}
 h1{font-size:1.75rem;line-height:1.1;margin:0;letter-spacing:-.015em}
 .count{margin:4px 0 0;color:var(--muted);font-size:.95rem}
 .count:empty{display:none}
@@ -50,11 +52,11 @@ h1{font-size:1.75rem;line-height:1.1;margin:0;letter-spacing:-.015em}
 /* Daily / As needed switch: swaps the whole view below it */
 .mode{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:14px}
 .mode button{height:50px;border:0;border-radius:10px;background:transparent;font-weight:700;font-size:1.05rem;display:flex;align-items:center;justify-content:center;gap:8px}
-.mode button[aria-pressed="true"]{background:var(--green);color:var(--on-green)}
+.mode button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
 .mode .n{font-weight:400;opacity:.85}
 .mode .dot{width:9px;height:9px;border-radius:50%;background:var(--amber);flex:none}
-.mode button[aria-pressed="true"] .dot{background:var(--on-green)}
-.switch-hint{all:unset;cursor:pointer;display:block;margin-top:8px;color:var(--green);font-weight:700;text-decoration:underline}
+.mode button[aria-pressed="true"] .dot{background:var(--on-accent)}
+.switch-hint{all:unset;cursor:pointer;display:block;margin-top:8px;color:var(--accent);font-weight:700;text-decoration:underline}
 .icon-btn{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);display:grid;place-items:center;flex:none}
 .icon-btn svg{width:22px;height:22px}
 
@@ -69,7 +71,7 @@ h1{font-size:1.75rem;line-height:1.1;margin:0;letter-spacing:-.015em}
 .att-list li+li{border-top:1px solid var(--line)}
 .att-list button{all:unset;box-sizing:border-box;display:flex;justify-content:space-between;align-items:baseline;gap:12px;width:100%;padding:12px 14px;cursor:pointer}
 .att-list .att-name{flex:1;min-width:0}
-.att-list button:focus-visible{outline:3px solid var(--green);outline-offset:-3px}
+.att-list button:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
 .att-name{font-weight:700}
 .att-why{font-size:.92rem;text-align:right;white-space:nowrap;flex:none}
 .why-expired{color:var(--red);font-weight:700}
@@ -86,7 +88,7 @@ h1{font-size:1.75rem;line-height:1.1;margin:0;letter-spacing:-.015em}
 /* Medicine list — each card reads like a dispensing label */
 .list{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:10px}
 .med{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:8px;width:100%;padding:14px 16px 14px 18px;background:var(--card);border:1px solid var(--line);border-radius:14px;position:relative;cursor:pointer}
-.med:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+.med:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .med::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:4px;border-radius:0 4px 4px 0;background:transparent}
 .med.is-expired::before{background:var(--red)}
 .med.is-soon::before,.med.is-low::before{background:var(--amber)}
@@ -109,7 +111,7 @@ h1{font-size:1.75rem;line-height:1.1;margin:0;letter-spacing:-.015em}
 .bar .btn{display:flex;max-width:684px;margin:0 auto;width:100%}
 
 /* Buttons */
-.btn{height:52px;padding:0 20px;border-radius:12px;border:0;background:var(--green);color:var(--on-green);font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:10px}
+.btn{height:52px;padding:0 20px;border-radius:12px;border:0;background:var(--accent);color:var(--on-accent);font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:10px}
 .btn[disabled]{opacity:.55;cursor:default}
 .btn-quiet{background:var(--card);color:var(--ink);border:1px solid var(--line)}
 .btn-danger{background:transparent;color:var(--red);border:1px solid var(--line)}
@@ -130,8 +132,8 @@ dialog::backdrop{background:rgba(10,20,20,.45)}
 /* Add chooser */
 .choices{display:grid;gap:10px}
 .choice{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:14px;padding:16px;border:1px solid var(--line);border-radius:14px;cursor:pointer}
-.choice:focus-visible{outline:3px solid var(--green);outline-offset:2px}
-.choice svg{width:28px;height:28px;flex:none;color:var(--green)}
+.choice:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.choice svg{width:28px;height:28px;flex:none;color:var(--accent)}
 .choice strong{display:block}
 .choice span{color:var(--muted);font-size:.95rem}
 
@@ -148,7 +150,7 @@ legend{font-weight:700;font-size:1.05rem;padding:0;margin-bottom:10px}
 .name-row input{flex:1}
 .ai-note{padding:10px 14px;border-radius:10px;margin-bottom:16px;font-size:.95rem;background:var(--amber-soft);border-left:4px solid var(--amber)}
 .ai-note.err{background:var(--red-soft);border-left-color:var(--red)}
-.ai-note.busy{background:var(--green-soft);border-left-color:var(--green)}
+.ai-note.busy{background:var(--accent-soft);border-left-color:var(--accent)}
 .ai-note .retry{display:flex;margin-top:10px}
 .photo-preview{display:flex;gap:12px;align-items:center;margin-bottom:14px}
 .photo-preview img{width:84px;height:84px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
@@ -185,17 +187,19 @@ legend{font-weight:700;font-size:1.05rem;padding:0;margin-bottom:10px}
 </head>
 <body>
 
-<div class="wrap">
+<div class="masthead"><div class="wrap">
   <header class="top">
     <div>
-      <h1>Medicine cabinet</h1>
+      <h1>Alice's Medicine Cabinet</h1>
       <p class="count" id="count"></p>
     </div>
     <button class="icon-btn" id="settings-btn" aria-label="Settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
     </button>
   </header>
+</div></div>
 
+<div class="wrap">
   <div class="mode" role="group" aria-label="Which medicines to show">
     <button type="button" data-mode="Daily" aria-pressed="true">Daily <span class="n" id="n-daily"></span><span class="dot" id="dot-daily" hidden title="Needs attention"></span></button>
     <button type="button" data-mode="As needed" aria-pressed="false">As needed <span class="n" id="n-asneeded"></span><span class="dot" id="dot-asneeded" hidden title="Needs attention"></span></button>
@@ -770,7 +774,7 @@ legend{font-weight:700;font-size:1.05rem;padding:0;margin-bottom:10px}
     try {
       const j = await api('shareKey');
       const link = location.origin + location.pathname + '#api=' + encodeURIComponent(state.cfg.url) + '&key=' + encodeURIComponent(j.viewKey);
-      if (navigator.share) { await navigator.share({ title: 'Medicine cabinet (view only)', url: link }); }
+      if (navigator.share) { await navigator.share({ title: 'Alice's Medicine Cabinet (view only)', url: link }); }
       else { await navigator.clipboard.writeText(link); toast('View-only link copied'); }
     } catch (e) { if (e.name !== 'AbortError') toast('Could not create the link: ' + e.message); }
   }
