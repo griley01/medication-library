@@ -1,6 +1,6 @@
 // Network-first for the app shell so updates pushed to GitHub arrive on next open;
 // falls back to the cached copy when offline. Calls to Apps Script are never cached here.
-const CACHE = 'medcab-v4';
+const CACHE = 'medcab-v5';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
