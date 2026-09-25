@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Alice's Medicine Cabinet</title>
+<title>Alice’s Medicine Cabinet</title>
 <meta name="theme-color" content="#FCEEF3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#26161D" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -190,7 +190,7 @@ legend{font-weight:700;font-size:1.05rem;padding:0;margin-bottom:10px}
 <div class="masthead"><div class="wrap">
   <header class="top">
     <div>
-      <h1>Alice's Medicine Cabinet</h1>
+      <h1>Alice’s Medicine Cabinet</h1>
       <p class="count" id="count"></p>
     </div>
     <button class="icon-btn" id="settings-btn" aria-label="Settings">
@@ -774,7 +774,7 @@ legend{font-weight:700;font-size:1.05rem;padding:0;margin-bottom:10px}
     try {
       const j = await api('shareKey');
       const link = location.origin + location.pathname + '#api=' + encodeURIComponent(state.cfg.url) + '&key=' + encodeURIComponent(j.viewKey);
-      if (navigator.share) { await navigator.share({ title: 'Alice's Medicine Cabinet (view only)', url: link }); }
+      if (navigator.share) { await navigator.share({ title: 'Alice’s Medicine Cabinet (view only)', url: link }); }
       else { await navigator.clipboard.writeText(link); toast('View-only link copied'); }
     } catch (e) { if (e.name !== 'AbortError') toast('Could not create the link: ' + e.message); }
   }
